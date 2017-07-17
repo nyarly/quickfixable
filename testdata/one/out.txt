@@ -1,0 +1,11 @@
+BEGIN   /home/judson/golang/src/github.com/opentable/sous/src/github.com/opentable/sous/ext/singularity
+
+--- FAIL: TestStableDeployment (0.00s)
+panic: runtime error: invalid memory address or nil pointer dereference [recovered]
+[signal SIGSEGV: segmentation violation code=0x1 addr=0x4c pc=0x90e072]
+
+goroutine 24 [running]:
+/home/judson/golang/src/github.com/opentable/sous/ext/singularity/deployment_builder.go:385 +0x842
+/home/judson/golang/src/github.com/opentable/sous/ext/singularity/deployer_test.go:293 +0x5bc
+/home/judson/golang/src/github.com/opentable/sous/ext/singularity/deployer_test.go:311 +0x2e1
+FAIL    /home/judson/golang/src/github.com/opentable/sous/src/github.com/opentable/sous/ext/singularity
