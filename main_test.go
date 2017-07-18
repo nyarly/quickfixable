@@ -10,16 +10,18 @@ import (
 )
 
 func TestFilter(t *testing.T) {
-	cases, err := filepath.Glob("testdata/*")
-	if err != nil {
-		t.Fatal(err)
-	}
+	/*
+		cases, err := filepath.Glob("testdata/*")
+		if err != nil {
+			t.Fatal(err)
+		}
+	*/
 
-	testcase := func(dir string) {
-		name := filepath.Base(dir)
+	testcase := func(gp, wp, pp, dir string) {
+		name := dir
 		t.Run(name, func(t *testing.T) {
-			inpath := filepath.Join(dir, "in.txt")
-			outpath := filepath.Join(dir, "out.txt")
+			inpath := filepath.Join("testdata", dir, "in.txt")
+			outpath := filepath.Join("testdata", dir, "out.txt")
 
 			in, err := os.Open(inpath)
 			if err != nil {
@@ -33,7 +35,9 @@ func TestFilter(t *testing.T) {
 
 			out := &bytes.Buffer{}
 
-			err = runFilter("/home/judson/golang", in, out)
+			filter := newFilter(gp, wp, pp, in)
+			_, err = io.Copy(out, filter)
+
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -52,7 +56,5 @@ func TestFilter(t *testing.T) {
 		})
 	}
 
-	for _, dir := range cases {
-		testcase(dir)
-	}
+	testcase("/home/judson/golang", "github.com/opentable/sous", "ext/singularity", "one")
 }
