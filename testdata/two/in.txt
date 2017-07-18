@@ -1,0 +1,50 @@
+warn: Panic in TestRectifyRecover with "something"
+warn:   What's that coming over the hill?!
+warn: goroutine 12 [running]:
+runtime/debug.Stack(0xc420041580, 0x9ca2c0, 0xc42025e3b0)
+	/nix/store/br0ngwcjyffc7d060spw44wah1hdnlwn-go-1.7.4/share/go/src/runtime/debug/stack.go:24 +0x79
+github.com/opentable/sous/ext/singularity.rectifyRecover(0x9ca2c0, 0xc42025e3a0, 0xa99692, 0x12, 0xc420041708)
+	/home/judson/golang/src/github.com/opentable/sous/ext/singularity/deployer.go:113 +0x6e
+panic(0x9ca2c0, 0xc42025e3b0)
+	/nix/store/br0ngwcjyffc7d060spw44wah1hdnlwn-go-1.7.4/share/go/src/runtime/panic.go:458 +0x243
+github.com/opentable/sous/ext/singularity.TestRectifyRecover.func1(0xc420041708)
+	/home/judson/golang/src/github.com/opentable/sous/ext/singularity/deployer_test.go:159 +0xfa
+github.com/opentable/sous/ext/singularity.TestRectifyRecover(0xc420464900)
+	/home/judson/golang/src/github.com/opentable/sous/ext/singularity/deployer_test.go:160 +0x57
+testing.tRunner(0xc420464900, 0xb0c450)
+	/nix/store/br0ngwcjyffc7d060spw44wah1hdnlwn-go-1.7.4/share/go/src/testing/testing.go:610 +0x81
+created by testing.(*T).Run
+	/nix/store/br0ngwcjyffc7d060spw44wah1hdnlwn-go-1.7.4/share/go/src/testing/testing.go:646 +0x2ec
+warn: Attempting to rectify empty diff for {"" ""}
+warn: Rectifying modified {"" ""}; Diffs: 
+warn: No changes applied to Singularity for {"" ""}
+warn: Attempting to rectify empty diff for {"" ""}
+warn: Rectifying modified {"" ""}; Diffs: 
+--- FAIL: TestFailOnNilBuildArtifact (0.00s)
+	recti-agent_test.go:99: Deploy did not return an error when given a sous.Deployable with an empty BuildArtifact
+--- FAIL: TestMapStartup (0.00s)
+    --- FAIL: TestMapStartup/Don't_skip_anything (0.00s)
+    	assertions.go:226:                           	Error Trace:	recti-agent_test.go:146
+    			            				recti-agent_test.go:188
+    			Error:      	Not equal: 
+    			            	expected: 106
+    			            	received: 0
+    	assertions.go:226:                           	Error Trace:	recti-agent_test.go:147
+    			            				recti-agent_test.go:188
+    			Error:      	Not equal: 
+    			            	expected: 107
+    			            	received: 0
+    	assertions.go:226:                           	Error Trace:	recti-agent_test.go:148
+    			            				recti-agent_test.go:188
+    			Error:      	Not equal: 
+    			            	expected: 108
+    			            	received: 0
+warn: Rectifying modified {"" ""}; Diffs: number of instances; this: 24; other: 12
+warn: Rectifying modified {"" ""}; Diffs: source id; this: "fake.tld/org/project,2.3.4-new"; other: "fake.tld/org/project,1.2.3-test"
+warn: Rectifying modified {"" ""}; Diffs: resources; this: map[memory:500]; other: map[memory:100]
+warn: Rectifying modified {"" ""}; Diffs: source id; this: "fake.tld/org/project,2.3.4-new"; other: "fake.tld/org/project,1.2.3-test"
+number of instances; this: 24; other: 1
+volumes; this: [&{host container RW},]; other: [&{host container RO},]
+warn: NOT DELETING REQUEST "reqid" (FOR: {"" ""})
+FAIL
+FAIL	github.com/opentable/sous/ext/singularity	0.017s
