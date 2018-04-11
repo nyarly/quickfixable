@@ -6,7 +6,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
+
+	"github.com/pmezard/go-difflib/difflib"
 )
 
 func TestFilter(t *testing.T) {
@@ -16,6 +19,14 @@ func TestFilter(t *testing.T) {
 			t.Fatal(err)
 		}
 	*/
+
+	escapes := regexp.MustCompile(`\r`)
+
+	escape := func(s string) string {
+		return escapes.ReplaceAllStringFunc(s, func(r string) string {
+			return "^M"
+		})
+	}
 
 	testcase := func(gp, wp, pp, dir string) {
 		name := dir
@@ -51,10 +62,22 @@ func TestFilter(t *testing.T) {
 				}
 				io.Copy(errfile, bytes.NewReader(actual))
 
-				t.Errorf("Filter output didn't match %q. Results recorded in %q.", outpath, errfile.Name())
+				ud := difflib.UnifiedDiff{
+					A:        difflib.SplitLines(escape(string(expected))),
+					B:        difflib.SplitLines(escape(string(actual))),
+					FromFile: inpath,
+					FromDate: "",
+					ToFile:   outpath,
+					ToDate:   "",
+					Context:  1,
+				}
+				diff, _ := difflib.GetUnifiedDiffString(ud)
+
+				t.Errorf("Filter output didn't match %q. Results recorded in %q.\nDiff: %s", outpath, errfile.Name(), diff)
 			}
 		})
 	}
 
 	testcase("/home/judson/golang", "github.com/opentable/sous", "ext/singularity", "one")
+	testcase("/home/judson/golang", "github.com/opentable/sous", "ext/singularity", "two")
 }

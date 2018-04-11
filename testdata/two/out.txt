@@ -2,19 +2,19 @@
 	recti-agent_test.go:99: Deploy did not return an error when given a sous.Deployable with an empty BuildArtifact
 --- FAIL: TestMapStartup (0.00s)
     --- FAIL: TestMapStartup/Don't_skip_anything (0.00s)
-    Error Trace:	recti-agent_test.go:146
+    Error Trace:	ext/singularity/recti-agent_test.go:146
     Error:      	Not equal: expected: 106 received: 0
-    Continued Trace:	recti-agent_test.go:188
+    Continued Trace:	ext/singularity/recti-agent_test.go:188
     Error:      	Not equal: expected: 106 received: 0
 
-    Error Trace:	recti-agent_test.go:147
+    Error Trace:	ext/singularity/recti-agent_test.go:147
     Error:      	Not equal: expected: 107 received: 0
-    Continued Trace		recti-agent_test.go:188
+    Continued Trace		ext/singularity/recti-agent_test.go:188
     Error:      	Not equal: expected: 107 received: 0
 
-    Error Trace:	recti-agent_test.go:148
+    Error Trace:	ext/singularity/recti-agent_test.go:148
     Error:      	Not equal: expected: 108 received: 0
-    Continued Trace:	recti-agent_test.go:188
+    Continued Trace:	ext/singularity/recti-agent_test.go:188
     Error:      	Not equal: expected: 108 received: 0
 FAIL
 FAIL	github.com/opentable/sous/ext/singularity	0.017s
