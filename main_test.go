@@ -73,7 +73,7 @@ func TestFilter(t *testing.T) {
 				}
 				diff, _ := difflib.GetUnifiedDiffString(ud)
 
-				t.Errorf("Filter output didn't match %q. Results recorded in %q.\nDiff: %s", outpath, errfile.Name(), diff)
+				t.Errorf("Filter output didn't match %q. Results recorded in %q.\n\tmeld %[1]s %[2]s\nDiff: \n%s", outpath, errfile.Name(), diff)
 			}
 		})
 	}

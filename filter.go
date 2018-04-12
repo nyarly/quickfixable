@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -16,18 +15,20 @@ type filter struct {
 	buf                *bufio.Reader
 	gopath, proj, pack string
 	infail, inpanic    bool
-	goroutineRE,
-	projRE *regexp.Regexp
+	projRE             *regexp.Regexp
 }
 
 func newFilter(gopath, projPath, packPath string, in io.Reader) *filter {
 	proj := filepath.Join(gopath, "src", projPath)
 	pack := filepath.Join(proj, packPath)
 
+	var projRE = regexp.MustCompile(`^\s*(` + string(proj) + `\S*).*`)
+
 	return &filter{
 		buf:    bufio.NewReader(in),
 		gopath: gopath,
 		proj:   proj,
+		projRE: projRE,
 		pack:   pack,
 		extra:  []byte(fmt.Sprintf("BEGIN   %s\n", pack)),
 	}
@@ -38,90 +39,56 @@ var failExit = regexp.MustCompile("^FAIL\t")
 var panicHeader = regexp.MustCompile(`^panic: `)
 var carriageReturn = regexp.MustCompile(".*\r\\s*")
 var goroutineRE = regexp.MustCompile(`^goroutine\s+\d+`)
-var projRE = regexp.MustCompile(`^\s*(` + string(proj) + `\S*).*`)
 
 func (f *filter) Read(p []byte) (n int, err error) {
-
-	if len(f.extra) > 0 {
-		return f.flush(p)
-	}
-
 	var part []byte
-	for {
+	for len(f.extra) < cap(p) {
 		var err error
 		part, err = f.buf.ReadBytes('\n')
 		if err != nil {
 			return 0, err
 		}
-		//log.Print("read ", string(part))
 
-		if bytes.Index(part, failExit) == 0 {
-			f.infail = false
-			f.inpanic = false
-			break
-		}
+		part := f.handleLine(part)
+		spew.Dump(string(part), f.infail, f.inpanic)
 
-		if bytes.Index(part, panicHeader) == 0 {
-			f.extra = append(f.extra, part...)
-			// skip extra panic notification
-			_, err = f.buf.ReadBytes('\n')
-			if err != nil {
-				return 0, err
-			}
-			// grab panic cause
-			if err := f.grabLine(); err != nil {
-				return 0, err
-			}
-			// grab spacer line
-			if err := f.grabLine(); err != nil {
-				return 0, err
-			}
-			f.inpanic = true
-			return f.flush(p)
-		}
+		f.extra = append(f.extra, part...)
 
-		if bytes.Index(part, failHeader) == 0 {
-			f.infail = true
-		}
-
-		if f.inpanic {
-			if goroutineRE.Match(part) {
-				break
-			}
-			if m := projRE.FindSubmatch(part); m != nil {
-				part = append(m[1], '\n')
-				break
-			}
-			continue
-		}
-
-		if f.infail {
-			f.extra = append(f.extra, part...)
-			if err := f.filterLine(); err != nil {
-				return 0, err
-			}
-			return f.flush(p)
-		}
 	}
 
-	f.extra = append(f.extra, part...)
 	return f.flush(p)
 }
 
-func (f *filter) handleLine(line []byte) (keep bool, line []byte) {
+func (f *filter) handleLine(line []byte) []byte {
+	spew.Dump(string(line))
 	switch {
 	default:
-		keep = true
+		return nil
 	case failExit.Match(line):
 		f.infail = false
 		f.inpanic = false
-		keep = false
+		return nil
 	case panicHeader.Match(line):
 		f.inpanic = true
-		keep = true
+		return debug("ph", line)
+	case failHeader.Match(line):
+		f.infail = true
+		return debug("fh", line)
+	case f.inpanic && goroutineRE.Match(line):
+		return debug("ip", line)
+	case f.inpanic:
+		if m := f.projRE.FindSubmatch(line); m != nil {
+			return debug("ipp", append(m[1], '\n'))
+		} else {
+			return nil
+		}
+	case f.infail:
+		return debug("if", line)
 	}
+}
 
-	return
+func debug(prefix string, line []byte) []byte {
+	return append([]byte(prefix+": "), line...)
 }
 
 func (f *filter) grabLine() error {
@@ -147,7 +114,6 @@ func (f *filter) filterLine() error {
 }
 
 func (f *filter) flush(p []byte) (n int, err error) {
-	spew.Dump(string(f.extra))
 	n = copy(p, f.extra)
 	f.extra = f.extra[n:]
 	return
