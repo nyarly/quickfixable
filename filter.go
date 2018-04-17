@@ -15,6 +15,7 @@ type filter struct {
 	buf                *bufio.Reader
 	gopath, proj, pack string
 	infail, inpanic    bool
+	panicHeader        uint
 	projRE             *regexp.Regexp
 }
 
@@ -37,6 +38,7 @@ func newFilter(gopath, projPath, packPath string, in io.Reader) *filter {
 var failHeader = regexp.MustCompile(`^--- FAIL: `)
 var failExit = regexp.MustCompile("^FAIL\t")
 var panicHeader = regexp.MustCompile(`^panic: `)
+var panicIndent = regexp.MustCompile(`^\tpanic: `)
 var carriageReturn = regexp.MustCompile(".*\r\\s*")
 var goroutineRE = regexp.MustCompile(`^goroutine\s+\d+`)
 
@@ -45,7 +47,14 @@ func (f *filter) Read(p []byte) (n int, err error) {
 	for len(f.extra) < cap(p) {
 		var err error
 		part, err = f.buf.ReadBytes('\n')
+		if err == io.EOF {
+			if len(f.extra) == 0 {
+				return 0, err
+			}
+			break
+		}
 		if err != nil {
+			spew.Dump(err)
 			return 0, err
 		}
 
@@ -53,7 +62,6 @@ func (f *filter) Read(p []byte) (n int, err error) {
 		spew.Dump(string(part), f.infail, f.inpanic)
 
 		f.extra = append(f.extra, part...)
-
 	}
 
 	return f.flush(p)
@@ -64,12 +72,18 @@ func (f *filter) handleLine(line []byte) []byte {
 	switch {
 	default:
 		return nil
+	case panicIndent.Match(line):
+		return nil
+	case f.panicHeader > 0:
+		f.panicHeader--
+		return debug("ph", line)
 	case failExit.Match(line):
 		f.infail = false
 		f.inpanic = false
-		return nil
+		return debug("fe", line)
 	case panicHeader.Match(line):
 		f.inpanic = true
+		f.panicHeader = 2
 		return debug("ph", line)
 	case failHeader.Match(line):
 		f.infail = true
@@ -88,7 +102,8 @@ func (f *filter) handleLine(line []byte) []byte {
 }
 
 func debug(prefix string, line []byte) []byte {
-	return append([]byte(prefix+": "), line...)
+	return line
+	//return append([]byte(prefix+": "), line...)
 }
 
 func (f *filter) grabLine() error {
@@ -116,5 +131,6 @@ func (f *filter) filterLine() error {
 func (f *filter) flush(p []byte) (n int, err error) {
 	n = copy(p, f.extra)
 	f.extra = f.extra[n:]
+	spew.Dump(len(f.extra))
 	return
 }
